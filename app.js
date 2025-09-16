@@ -1,8 +1,9 @@
-/* Time Timer – Visual countdown (드래그 제거 버전)
+/* Time Timer – Visual countdown (소리 3번 버전)
  * - 60분 스케일, 설정한 시간만큼 빨간영역 즉시 표시
  * - 시작 시 그 지점부터 줄어듦
  * - 분침은 표시만 (조작 불가)
  * - 시간 설정은 '프리셋' 또는 '분 입력'만 사용
+ * - 종료 시 삡 삡 삡 (3회) 소리
  */
 
 const CENTER = { x: 150, y: 150 };
@@ -40,6 +41,24 @@ function loadSetting(){
   muted = localStorage.getItem('ttimer:muted') === '1';
   btnMute.textContent = muted ? '🔇' : '🔊';
   setDurationMinutes(clamp(m, 0, 60));
+}
+
+// ---------- Beep Sound ----------
+let audioCtx;
+function beep(){
+  if (muted) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+    o.start(); o.stop(audioCtx.currentTime + 0.4);
+  } catch(e){}
 }
 
 // ---------- Drawing ----------
@@ -150,7 +169,13 @@ function tick(){
     remainingSec = 0;
     remainingEl.textContent = fmt(0);
     drawSector();
-    if (!muted && navigator.vibrate) navigator.vibrate([160,80,160]);
+    // 삡 삡 삡 (3회)
+    let count = 0;
+    const interval = setInterval(()=>{
+      beep();
+      count++;
+      if (count >= 3) clearInterval(interval);
+    }, 600);
     return;
   }
   rafId = requestAnimationFrame(tick);
@@ -177,7 +202,7 @@ function resetRun(){
   drawSector();
 }
 
-// ---------- Events (드래그 없음) ----------
+// ---------- Events ----------
 btnStartPause.addEventListener('click', () => running ? stopRun() : startRun());
 btnReset.addEventListener('click', resetRun);
 
