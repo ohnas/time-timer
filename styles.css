@@ -1,0 +1,109 @@
+:root{
+  --bg:#f5f7fb;
+  --body:#2c2f35;
+  --face:#fff;
+  --ring:#d9dee7;
+  --red:#e53935;
+  --text:#0f172a;
+  --muted:#6b7280;
+  --btn:#111827;
+  --btn-text:#fff;
+  --chip:#e5e7eb;
+  --knob:#ffffff;
+  --knob-notch:#e7e9ee;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b0d12;
+    --body:#0f141b;
+    --face:#0f141b;
+    --ring:#2b3240;
+    --red:#ff4d4a;
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+    --btn:#e5e7eb;
+    --btn-text:#0b0d12;
+    --chip:#222936;
+    --knob:#121722;
+    --knob-notch:#2b3240;
+  }
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font:16px/1.5 ui-sans-serif, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, "Noto Sans KR", system-ui, sans-serif;
+  color:var(--text);
+  background:var(--bg);
+}
+
+.app{
+  max-width:840px;
+  margin:0 auto;
+  padding:20px 16px 28px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.app__header{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+}
+.app__title{margin:0;font-size:clamp(18px,2.6vw,24px);font-weight:700}
+.app__readout{font-variant-numeric:tabular-nums; font-weight:700; font-size:clamp(18px,5vw,32px)}
+
+.timer{
+  width:100%;
+  display:grid;
+  place-items:center;
+}
+.timer__svg{
+  width:min(88vw,520px);
+  height:auto;
+  display:block;
+}
+
+.knob{cursor:grab}
+.knob:active{cursor:grabbing}
+
+.controls{display:flex; flex-direction:column; gap:12px}
+.controls__row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+
+.inline{display:flex; align-items:center; gap:8px; color:var(--muted)}
+input[type="number"]{
+  width:90px; padding:10px 12px; border-radius:12px;
+  border:1px solid var(--ring); background:var(--face); color:var(--text);
+  font-weight:600; font-variant-numeric:tabular-nums;
+}
+
+.btn{
+  border:1px solid var(--ring);
+  background:var(--face);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:14px;
+  font-weight:700;
+}
+.btn--primary{
+  background:var(--btn);
+  color:var(--btn-text);
+  border:1px solid transparent;
+}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+
+.presets{display:flex; gap:8px}
+.chip{
+  border:none; background:var(--chip); color:var(--text);
+  padding:8px 10px; border-radius:14px; font-weight:700;
+}
+
+.hint{margin:.25rem 0 0; color:var(--muted); font-size:.9rem}
+.app__footer{color:var(--muted); text-align:center}
+
+/* Notion/iframe safe sizing */
+html, body, .app { width:100% }
