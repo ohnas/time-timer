@@ -16,6 +16,8 @@ const minutesInput = document.getElementById('minutesInput');
 const btnStartPause = document.getElementById('startPause');
 const btnReset = document.getElementById('reset');
 const btnMute = document.getElementById('mute');
+const SCALE_SEC = 60 * 60; // 60분 고정 스케일 (Time Timer 물리 제품과 동일)
+
 
 let durationSec = 25 * 60;        // total seconds
 let remainingSec = durationSec;   // remaining seconds
@@ -69,9 +71,13 @@ function loadSetting(){
  * 0 minutes = angle 0 (pointing up); increases clockwise to 360 (60 minutes)
  * Convert minutes (0–60) or seconds to angle degrees.
  */
-function secToAngle(secTotal, secRemain){
-  const frac = clamp(secRemain / secTotal, 0, 1);
-  return 360 * frac; // remaining sector size
+// function secToAngle(secTotal, secRemain){
+//   const frac = clamp(secRemain / secTotal, 0, 1);
+//   return 360 * frac; // remaining sector size
+// }
+function secToAngle(secRemain){
+  const frac = clamp(secRemain / SCALE_SEC, 0, 1);
+  return 360 * frac; // 0~360deg
 }
 
 function polar(cx, cy, r, deg){
@@ -104,7 +110,8 @@ function sectorPath(cx, cy, r, deg){
 }
 
 function drawSector(){
-  const deg = secToAngle(durationSec, remainingSec);
+//   const deg = secToAngle(durationSec, remainingSec);
+  const deg = secToAngle(remainingSec);
   sector.setAttribute('d', sectorPath(CENTER.x, CENTER.y, R, deg));
   // Update knob position on arc end
   const pos = polar(CENTER.x, CENTER.y, R, 360 - deg);
