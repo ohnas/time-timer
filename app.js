@@ -71,10 +71,7 @@ function loadSetting(){
  * 0 minutes = angle 0 (pointing up); increases clockwise to 360 (60 minutes)
  * Convert minutes (0–60) or seconds to angle degrees.
  */
-// function secToAngle(secTotal, secRemain){
-//   const frac = clamp(secRemain / secTotal, 0, 1);
-//   return 360 * frac; // remaining sector size
-// }
+
 function secToAngle(secRemain){
   const frac = clamp(secRemain / SCALE_SEC, 0, 1);
   return 360 * frac; // 0~360deg
@@ -110,18 +107,20 @@ function sectorPath(cx, cy, r, deg){
 }
 
 function drawSector(){
-//   const deg = secToAngle(durationSec, remainingSec);
+  // 남은 시간을 60분 스케일(0~360deg)로 변환한 섹터 각도
   const deg = secToAngle(remainingSec);
+
+  // 빨간 영역(remaining) 그리기
   sector.setAttribute('d', sectorPath(CENTER.x, CENTER.y, R, deg));
-  // Update knob position on arc end
-  const pos = polar(CENTER.x, CENTER.y, R, 360 - deg);
-  const dx = pos.x - CENTER.x, dy = pos.y - CENTER.y;
-  const angRad = Math.atan2(dy, dx);
-  const knobR = 28;
-  const kx = CENTER.x + Math.cos(angRad) * 0; // keep center fixed
-  const ky = CENTER.y + Math.sin(angRad) * 0;
-  knob.setAttribute('transform', `rotate(${360 - deg} 150 150)`);
-  knob.setAttribute('aria-valuenow', String(360 - deg));
+
+  // 경계(분침)가 가리켜야 하는 절대 각도: '12시=0°'에서 시계방향
+  const boundary = (360 - deg + 360) % 360;
+
+  // SVG rotate는 '3시'가 0°라서 12시 기준으로 보정(-90°)
+  const knobAngle = (boundary - 90 + 360) % 360;
+
+  knob.setAttribute('transform', `rotate(${knobAngle} 150 150)`);
+  knob.setAttribute('aria-valuenow', String(boundary));
 }
 
 function drawTicks(){
