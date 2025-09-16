@@ -1,60 +1,36 @@
-/* Time Timer – Visual countdown
- * - Drag knob to set 0–60 minutes
- * - Start/Pause/Reset, presets, mm:ss readout
- * - Beep + vibration at end, last setting saved to localStorage
+/* Time Timer – Visual countdown (드래그 제거 버전)
+ * - 60분 스케일, 설정한 시간만큼 빨간영역 즉시 표시
+ * - 시작 시 그 지점부터 줄어듦
+ * - 분침은 표시만 (조작 불가)
+ * - 시간 설정은 '프리셋' 또는 '분 입력'만 사용
  */
 
-const TWO_PI = Math.PI * 2;
 const CENTER = { x: 150, y: 150 };
-const R = 118; // sector radius (inside white face)
-const remainingEl = document.getElementById('remaining');
-const dial = document.getElementById('dial');
-const sector = document.getElementById('sector');
-const ticksG = document.getElementById('ticks');
-const knob = document.getElementById('knob');
-const minutesInput = document.getElementById('minutesInput');
+const R = 118;                 // sector radius (inside white face)
+const SCALE_SEC = 60 * 60;     // 항상 60분 스케일
+
+const remainingEl   = document.getElementById('remaining');
+const dial          = document.getElementById('dial');
+const sector        = document.getElementById('sector');
+const ticksG        = document.getElementById('ticks');
+const knob          = document.getElementById('knob');
+const minutesInput  = document.getElementById('minutesInput');
 const btnStartPause = document.getElementById('startPause');
-const btnReset = document.getElementById('reset');
-const btnMute = document.getElementById('mute');
-const SCALE_SEC = 60 * 60; // 60분 고정 스케일 (Time Timer 물리 제품과 동일)
+const btnReset      = document.getElementById('reset');
+const btnMute       = document.getElementById('mute');
 
-
-let durationSec = 25 * 60;        // total seconds
-let remainingSec = durationSec;   // remaining seconds
+let durationSec = 25 * 60;
+let remainingSec = durationSec;
 let running = false;
 let rafId = null;
 let endAt = null;
 let muted = false;
 
-// WebAudio beep
-let audioCtx;
-function beep() {
-  if (muted) return;
-  try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(880, audioCtx.currentTime);
-    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
-    o.start(); o.stop(audioCtx.currentTime + 0.4);
-  } catch {}
-}
+// ---------- Utils ----------
+const clamp = (v,min,max)=> Math.max(min, Math.min(max,v));
+const pad   = n => String(n).padStart(2,'0');
+const fmt   = s => `${pad(Math.floor(s/60))}:${pad(s%60)}`;
 
-function vibrate() {
-  if (navigator.vibrate) navigator.vibrate([160, 80, 160]);
-}
-
-// ---------- UI helpers ----------
-function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-function pad(n){ return String(n).padStart(2, '0'); }
-function fmt(sec){
-  const m = Math.floor(sec / 60), s = sec % 60;
-  return `${pad(m)}:${pad(s)}`;
-}
 function saveSetting(){
   localStorage.setItem('ttimer:lastMin', String(Math.round(durationSec/60)));
   localStorage.setItem('ttimer:muted', muted ? '1' : '0');
@@ -67,25 +43,19 @@ function loadSetting(){
 }
 
 // ---------- Drawing ----------
-/* Angle convention:
- * 0 minutes = angle 0 (pointing up); increases clockwise to 360 (60 minutes)
- * Convert minutes (0–60) or seconds to angle degrees.
- */
-
 function secToAngle(secRemain){
   const frac = clamp(secRemain / SCALE_SEC, 0, 1);
-  return 360 * frac; // 0~360deg
+  return 360 * frac; // 0~360 (남은량)
 }
 
 function polar(cx, cy, r, deg){
-  const rad = (deg - 90) * (Math.PI/180); // 0deg at top, clockwise
+  const rad = (deg - 90) * (Math.PI/180); // 0°=12시
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
 function sectorPath(cx, cy, r, deg){
-  if (deg <= 0) return '';                    // nothing
-  if (deg >= 360) {                           // full circle sector
-    // draw full circle by two arcs
+  if (deg <= 0) return '';
+  if (deg >= 360) {
     const p1 = polar(cx, cy, r, 0);
     return [
       `M ${cx} ${cy}`,
@@ -107,16 +77,12 @@ function sectorPath(cx, cy, r, deg){
 }
 
 function drawSector(){
-  // 남은 시간을 60분 스케일(0~360deg)로 변환한 섹터 각도
   const deg = secToAngle(remainingSec);
-
-  // 빨간 영역(remaining) 그리기
   sector.setAttribute('d', sectorPath(CENTER.x, CENTER.y, R, deg));
 
-  // 경계(분침)가 가리켜야 하는 절대 각도: '12시=0°'에서 시계방향
+  // 경계(분침) 각도: 12시=0 기준 시계방향
   const boundary = (360 - deg + 360) % 360;
-
-  // SVG rotate는 '3시'가 0°라서 12시 기준으로 보정(-90°)
+  // SVG rotate는 3시=0 이므로 -90° 보정
   const knobAngle = (boundary - 90 + 360) % 360;
 
   knob.setAttribute('transform', `rotate(${knobAngle} 150 150)`);
@@ -124,7 +90,6 @@ function drawSector(){
 }
 
 function drawTicks(){
-  const g = document.createDocumentFragment();
   const outerR = 120, innerMajor = 100, innerMinor = 110;
   for (let i=0;i<60;i++){
     const deg = i*6;
@@ -185,7 +150,7 @@ function tick(){
     remainingSec = 0;
     remainingEl.textContent = fmt(0);
     drawSector();
-    beep(); vibrate();
+    if (!muted && navigator.vibrate) navigator.vibrate([160,80,160]);
     return;
   }
   rafId = requestAnimationFrame(tick);
@@ -194,7 +159,7 @@ function tick(){
 function startRun(){
   if (durationSec <= 0) return;
   if (remainingSec <= 0) remainingSec = durationSec;
-  endAt = performance.now() + remainingSec*1000 + 30; // small cushion
+  endAt = performance.now() + remainingSec*1000 + 30;
   running = true; updateButtons();
   rafId = requestAnimationFrame(tick);
 }
@@ -212,7 +177,7 @@ function resetRun(){
   drawSector();
 }
 
-// ---------- Events ----------
+// ---------- Events (드래그 없음) ----------
 btnStartPause.addEventListener('click', () => running ? stopRun() : startRun());
 btnReset.addEventListener('click', resetRun);
 
@@ -235,64 +200,12 @@ document.querySelectorAll('.chip').forEach(b=>{
   });
 });
 
-// Drag to set time
-let dragging = false;
-function pointAngle(evt){
-  const pt = dial.createSVGPoint();
-  if (evt.touches && evt.touches[0]) {
-    pt.x = evt.touches[0].clientX;
-    pt.y = evt.touches[0].clientY;
-  } else {
-    pt.x = evt.clientX; pt.y = evt.clientY;
-  }
-  const m = pt.matrixTransform(dial.getScreenCTM().inverse());
-  const dx = m.x - CENTER.x, dy = m.y - CENTER.y;
-  let angle = Math.atan2(dy, dx) * 180/Math.PI + 90; // 0 on top
-  if (angle < 0) angle += 360;
-  return angle; // 0..360 clockwise
-}
-
-function angleToMinutes(angle){
-  const minutes = Math.round((angle/360) * 60);
-  return (minutes === 60) ? 60 : minutes;
-}
-
-function onDrag(evt){
-  if (!dragging) return;
-  evt.preventDefault();
-  const ang = pointAngle(evt);
-  const mins = angleToMinutes(ang);
-  setDurationMinutes(mins);
-}
-
-function startDrag(evt){
-  dragging = true;
-  stopRun();            // stop if running
-  onDrag(evt);
-}
-function endDrag(){ dragging = false; }
-
-['pointerdown','mousedown','touchstart'].forEach(ev => knob.addEventListener(ev, startDrag, {passive:false}));
-['pointermove','mousemove','touchmove'].forEach(ev => window.addEventListener(ev, onDrag, {passive:false}));
-['pointerup','mouseup','touchend','touchcancel','mouseleave'].forEach(ev => window.addEventListener(ev, endDrag));
-
-// Keyboard for accessibility
-knob.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowUp'){
-    setDurationMinutes(clamp(Math.round(durationSec/60)+1, 0, 60)); e.preventDefault();
-  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown'){
-    setDurationMinutes(clamp(Math.round(durationSec/60)-1, 0, 60)); e.preventDefault();
-  } else if (e.key === 'Enter' || e.key === ' '){
-    btnStartPause.click(); e.preventDefault();
-  }
-});
-
-// Persist + init
+// 초기화
 loadSetting();
 remainingEl.textContent = fmt(remainingSec);
 drawSector();
 
-// Visibility pause (saves battery in embeds)
+// 탭 전환 시 자동 일시정지
 document.addEventListener('visibilitychange', ()=>{
   if (document.hidden && running) stopRun();
 });

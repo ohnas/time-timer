@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>Visual Time Timer</title>
     <meta name="description"
-        content="Time Timer style visual countdown (0–60min). Drag to set time, start/pause, responsive, works in Notion embed." />
+        content="Time Timer style visual countdown (0–60min). Preset or manual input only. Responsive and Notion-embed friendly." />
     <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -31,8 +31,6 @@
 
                 <rect x="10" y="10" width="280" height="280" rx="36" ry="36" fill="var(--body)" filter="url(#shadow)">
                 </rect>
-
-                <!-- white inner face -->
                 <circle cx="150" cy="150" r="120" fill="var(--face)" />
 
                 <!-- RED sector (remaining time) -->
@@ -44,9 +42,8 @@
                 <!-- center cap -->
                 <circle cx="150" cy="150" r="8" fill="var(--ring)" />
 
-                <!-- draggable knob -->
-                <g id="knob" class="knob" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="360"
-                    aria-valuenow="0" aria-label="시간 설정 다이얼">
+                <!-- knob (분침: 표시 전용) -->
+                <g id="knob" class="knob">
                     <circle cx="150" cy="150" r="22" fill="var(--knob)" stroke="var(--ring)" stroke-width="2"></circle>
                     <rect x="170" y="147" width="55" height="6" rx="3" ry="3" fill="var(--knob-notch)"></rect>
                 </g>
@@ -72,7 +69,7 @@
                     <button class="chip" data-min="25">25</button>
                 </div>
             </div>
-            <p class="hint">드래그로 다이얼을 돌리거나, 분을 입력/프리셋을 눌러 설정하세요. (최대 60분)</p>
+            <p class="hint">시간 설정은 프리셋 버튼 또는 직접 분 입력으로만 가능합니다. (최대 60분)</p>
         </section>
 
         <footer class="app__footer">
