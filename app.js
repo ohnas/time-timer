@@ -6,6 +6,23 @@
  * - 종료 시 삡 삡 삡 (3회) 소리
  */
 
+// ----- Embed / Notion detection -----
+// 페이지가 iframe 안에 있으면 is-embed, referrer가 노션이면 is-notion-embed 클래스 부여
+(() => {
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+
+  // 수동 강제 옵션 (?embed=1 또는 ?embed=notion)
+  const force = params.get('embed');
+  const inIFrame = (window.self !== window.top) || force;
+
+  if (inIFrame) {
+    root.classList.add('is-embed');
+    const isNotionRef = /notion\.so|notion\.site/i.test(document.referrer || '') || String(force).toLowerCase() === 'notion';
+    if (isNotionRef) root.classList.add('is-notion-embed');
+  }
+})();
+
 const CENTER = { x: 150, y: 150 };
 const R = 118;                 // sector radius (inside white face)
 const SCALE_SEC = 60 * 60;     // 항상 60분 스케일

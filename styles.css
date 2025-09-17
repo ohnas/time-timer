@@ -8,25 +8,27 @@
   --muted:#6b7280;
   --btn:#111827;
   --btn-text:#fff;
-  --chip:#e5e7eb;
+  --chip:#eef0f4;
   --knob:#ffffff;
   --knob-notch:#e7e9ee;
+  --shadow:0 10px 28px rgba(0,0,0,.10);
 }
 
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0b0d12;
     --body:#0f141b;
-    --face:#0f141b;
+    --face:#10151f;
     --ring:#2b3240;
     --red:#ff4d4a;
     --text:#e5e7eb;
     --muted:#9ca3af;
     --btn:#e5e7eb;
     --btn-text:#0b0d12;
-    --chip:#222936;
+    --chip:#1b2331;
     --knob:#121722;
     --knob-notch:#2b3240;
+    --shadow:0 10px 28px rgba(0,0,0,.35);
   }
 }
 
@@ -39,13 +41,16 @@ body{
   background:var(--bg);
 }
 
+/* ===== 레이아웃 ===== */
 .app{
+  position:relative;
   max-width:840px;
+  min-height:100svh;
   margin:0 auto;
-  padding:20px 16px 28px;
+  padding:20px 16px 24px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:18px;
 }
 
 .app__header{
@@ -57,33 +62,43 @@ body{
 .app__title{margin:0;font-size:clamp(18px,2.6vw,24px);font-weight:700}
 .app__readout{font-variant-numeric:tabular-nums; font-weight:700; font-size:clamp(18px,5vw,32px)}
 
-.timer{
-  width:100%;
-  display:grid;
-  place-items:center;
-}
+/* 다이얼 */
+.timer{ width:100%; display:grid; place-items:center; }
 .timer__svg{
-  width:min(88vw,520px);
+  width:min(88vw, 520px, 70svh);
   height:auto;
   display:block;
-  /* 드래그 조작 제거 → 커서는 기본 */
   cursor:default;
+  aspect-ratio:1/1;
 }
+.knob{ pointer-events:none; cursor:default; } /* 분침은 표시만 */
 
-/* knob(분침)는 단순 표시용 */
-.knob{
-  pointer-events:none;
-  cursor:default;
+/* ===== 카드형 컨트롤(기본 디자인) ===== */
+.controls{
+  margin-inline:auto;
+  width:fit-content;
+  max-width:96vw;
+
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+
+  background:var(--face);
+  border:1px solid var(--ring);
+  border-radius:20px;
+  padding:12px 14px;
+  box-shadow:var(--shadow);
+  backdrop-filter:saturate(1.15) blur(4px);
 }
-
-.controls{display:flex; flex-direction:column; gap:12px}
-.controls__row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.controls__row{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center;
+}
 
 .inline{display:flex; align-items:center; gap:8px; color:var(--muted)}
 input[type="number"]{
-  width:90px; padding:10px 12px; border-radius:12px;
+  width:90px; padding:10px 12px; border-radius:14px;
   border:1px solid var(--ring); background:var(--face); color:var(--text);
-  font-weight:600; font-variant-numeric:tabular-nums;
+  font-weight:700; font-variant-numeric:tabular-nums;
 }
 
 .btn{
@@ -92,22 +107,67 @@ input[type="number"]{
   color:var(--text);
   padding:10px 14px;
   border-radius:14px;
-  font-weight:700;
+  font-weight:800;
 }
-.btn--primary{
-  background:var(--btn);
-  color:var(--btn-text);
-  border:1px solid transparent;
-}
+.btn--primary{ background:var(--btn); color:var(--btn-text); border:1px solid transparent; }
 .btn:disabled{opacity:.5; cursor:not-allowed}
 
-.presets{display:flex; gap:8px}
+.presets{display:flex; gap:10px; flex-wrap:wrap}
 .chip{
   border:none; background:var(--chip); color:var(--text);
-  padding:8px 10px; border-radius:14px; font-weight:700;
+  padding:10px 14px; border-radius:14px; font-weight:800;
 }
 
 .hint{margin:.25rem 0 0; color:var(--muted); font-size:.9rem}
 
 /* Notion/iframe safe sizing */
 html, body, .app { width:100% }
+
+/* ===== 높이 축소 대응(필요한 최소치만) ===== */
+
+/* 700px 이하: 남은시간을 우상단 오버레이, 다이얼/컨트롤 살짝 축소 */
+@media (max-height: 700px){
+  .app{ gap:14px; padding-top:14px; padding-bottom:18px; }
+  .app__readout{ position:absolute; top:8px; right:10px; font-size:clamp(16px,4.2vw,28px); }
+  .app__title{ font-size:clamp(16px,2.2vw,20px); }
+  .timer__svg{ width:min(86vw, 480px, 62svh); }
+  .controls{ gap:10px; padding:10px 12px; border-radius:18px; }
+  .chip{ padding:8px 12px }
+  input[type="number"]{ padding:8px 10px; width:84px }
+  .timer__svg text{ font-size:14px !important }
+}
+
+/* 560px 이하: 컨트롤을 하단 스티키 카드로 */
+@media (max-height: 560px){
+  .app{ gap:10px; padding-top:10px; padding-bottom:14px; }
+  .timer__svg{ width:min(84vw, 440px, 54svh); }
+
+  .controls{
+    position:sticky; bottom:8px;
+    padding:8px 10px; gap:8px; border-radius:16px;
+  }
+  .btn{ padding:8px 12px }
+  .chip{ padding:7px 10px }
+  input[type="number"]{ padding:7px 9px; width:78px }
+  .hint{ display:none }
+  .timer__svg text{ font-size:13px !important }
+}
+
+/* 480px 이하: 제목 숨기고 다이얼 우선 */
+@media (max-height: 480px){
+  .app__title{ display:none; }
+  .timer__svg{ width:min(82vw, 400px, 48svh); }
+  .app__readout{ top:6px; right:10px; font-size:clamp(14px,3.6vw,22px); }
+  .btn{ padding:7px 10px } .chip{ padding:6px 9px } input[type="number"]{ padding:6px 8px; width:72px }
+  .timer__svg text{ font-size:12px !important }
+}
+
+/* ===== 임베드 / 노션 임베드도 동일한 기본 카드 디자인 적용 ===== */
+html.is-embed .app{ min-height:100svh; padding:12px }
+html.is-embed .timer__svg{ width:min(94vw, 520px, 76svh); }
+
+html.is-notion-embed .app{ padding:10px; gap:12px; }
+html.is-notion-embed .app__title{ font-size:clamp(16px,2.2vw,20px); }
+html.is-notion-embed .app__readout{ font-size:clamp(16px,4vw,26px); }
+html.is-notion-embed .timer__svg{ width:min(96vw, 520px, 80svh); }
+html.is-notion-embed .hint{ display:none; }
