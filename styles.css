@@ -108,7 +108,6 @@ input[type="number"]{
 }
 
 .hint{margin:.25rem 0 0; color:var(--muted); font-size:.9rem}
-.app__footer{color:var(--muted); text-align:center}
 
 /* Notion/iframe safe sizing */
 html, body, .app { width:100% }
