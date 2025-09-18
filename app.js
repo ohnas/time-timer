@@ -7,15 +7,11 @@
  */
 
 // ----- Embed / Notion detection -----
-// 페이지가 iframe 안에 있으면 is-embed, referrer가 노션이면 is-notion-embed 클래스 부여
 (() => {
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
-
-  // 수동 강제 옵션 (?embed=1 또는 ?embed=notion)
   const force = params.get('embed');
   const inIFrame = (window.self !== window.top) || force;
-
   if (inIFrame) {
     root.classList.add('is-embed');
     const isNotionRef = /notion\.so|notion\.site/i.test(document.referrer || '') || String(force).toLowerCase() === 'notion';
@@ -24,11 +20,10 @@
 })();
 
 const CENTER = { x: 150, y: 150 };
-const R = 118;                 // sector radius (inside white face)
-const SCALE_SEC = 60 * 60;     // 항상 60분 스케일
+const R = 118;
+const SCALE_SEC = 60 * 60;
 
 const remainingEl   = document.getElementById('remaining');
-const dial          = document.getElementById('dial');
 const sector        = document.getElementById('sector');
 const ticksG        = document.getElementById('ticks');
 const knob          = document.getElementById('knob');
@@ -66,6 +61,7 @@ function beep(){
   if (muted) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     o.type = 'sine';
@@ -81,14 +77,12 @@ function beep(){
 // ---------- Drawing ----------
 function secToAngle(secRemain){
   const frac = clamp(secRemain / SCALE_SEC, 0, 1);
-  return 360 * frac; // 0~360 (남은량)
+  return 360 * frac;
 }
-
 function polar(cx, cy, r, deg){
-  const rad = (deg - 90) * (Math.PI/180); // 0°=12시
+  const rad = (deg - 90) * (Math.PI/180);
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
-
 function sectorPath(cx, cy, r, deg){
   if (deg <= 0) return '';
   if (deg >= 360) {
@@ -111,20 +105,14 @@ function sectorPath(cx, cy, r, deg){
     'Z'
   ].join(' ');
 }
-
 function drawSector(){
   const deg = secToAngle(remainingSec);
   sector.setAttribute('d', sectorPath(CENTER.x, CENTER.y, R, deg));
-
-  // 경계(분침) 각도: 12시=0 기준 시계방향
   const boundary = (360 - deg + 360) % 360;
-  // SVG rotate는 3시=0 이므로 -90° 보정
   const knobAngle = (boundary - 90 + 360) % 360;
-
   knob.setAttribute('transform', `rotate(${knobAngle} 150 150)`);
   knob.setAttribute('aria-valuenow', String(boundary));
 }
-
 function drawTicks(){
   const outerR = 120, innerMajor = 100, innerMinor = 110;
   for (let i=0;i<60;i++){
@@ -138,7 +126,6 @@ function drawTicks(){
     line.setAttribute('stroke', i%5===0 ? '#0f0f0f22' : '#0f0f0f16');
     line.setAttribute('stroke-width', i%5===0 ? '3' : '2');
     ticksG.appendChild(line);
-
     if (i%5===0){
       const num = (i===0) ? '0' : String(60-i);
       const tp = polar(150,150,92,deg);
@@ -166,12 +153,10 @@ function setDurationMinutes(min){
   updateButtons();
   saveSetting();
 }
-
 function updateButtons(){
   btnStartPause.disabled = durationSec === 0;
   btnStartPause.textContent = running ? '일시정지' : '시작';
 }
-
 function tick(){
   const now = performance.now();
   const msLeft = Math.max(0, endAt - now);
@@ -197,7 +182,6 @@ function tick(){
   }
   rafId = requestAnimationFrame(tick);
 }
-
 function startRun(){
   if (durationSec <= 0) return;
   if (remainingSec <= 0) remainingSec = durationSec;
@@ -205,13 +189,11 @@ function startRun(){
   running = true; updateButtons();
   rafId = requestAnimationFrame(tick);
 }
-
 function stopRun(){
   running = false; updateButtons();
   if (rafId) cancelAnimationFrame(rafId);
   rafId = null;
 }
-
 function resetRun(){
   stopRun();
   remainingSec = durationSec;
@@ -230,9 +212,13 @@ btnMute.addEventListener('click', () => {
   saveSetting();
 });
 
-minutesInput.addEventListener('change', e => {
-  const val = Number(e.target.value || 0);
-  setDurationMinutes(clamp(val, 0, 60));
+// (3) 숫자 입력 안정화: 실시간 반영 + 경계 보정
+minutesInput.addEventListener('input', e => {
+  const raw = String(e.target.value || '');
+  const val = Number(raw.replace(/[^\d]/g,'') || 0);
+  const clamped = clamp(val, 0, 60);
+  e.target.value = String(clamped);
+  setDurationMinutes(clamped);
 });
 
 document.querySelectorAll('.chip').forEach(b=>{

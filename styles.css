@@ -125,7 +125,7 @@ html, body, .app { width:100% }
 
 /* ===== 높이 축소 대응(필요한 최소치만) ===== */
 
-/* 700px 이하: 남은시간을 우상단 오버레이, 다이얼/컨트롤 살짝 축소 */
+/* 700px 이하 */
 @media (max-height: 700px){
   .app{ gap:14px; padding-top:14px; padding-bottom:18px; }
   .app__readout{ position:absolute; top:8px; right:10px; font-size:clamp(16px,4.2vw,28px); }
@@ -137,11 +137,10 @@ html, body, .app { width:100% }
   .timer__svg text{ font-size:14px !important }
 }
 
-/* 560px 이하: 컨트롤을 하단 스티키 카드로 */
+/* 560px 이하: 컨트롤 하단 스티키 */
 @media (max-height: 560px){
   .app{ gap:10px; padding-top:10px; padding-bottom:14px; }
   .timer__svg{ width:min(84vw, 440px, 54svh); }
-
   .controls{
     position:sticky; bottom:8px;
     padding:8px 10px; gap:8px; border-radius:16px;
@@ -153,7 +152,7 @@ html, body, .app { width:100% }
   .timer__svg text{ font-size:13px !important }
 }
 
-/* 480px 이하: 제목 숨기고 다이얼 우선 */
+/* 480px 이하: 제목 숨김 */
 @media (max-height: 480px){
   .app__title{ display:none; }
   .timer__svg{ width:min(82vw, 400px, 48svh); }
@@ -162,7 +161,7 @@ html, body, .app { width:100% }
   .timer__svg text{ font-size:12px !important }
 }
 
-/* ===== 임베드 / 노션 임베드도 동일한 기본 카드 디자인 적용 ===== */
+/* ===== 임베드 / 노션 임베드 ===== */
 html.is-embed .app{ min-height:100svh; padding:12px }
 html.is-embed .timer__svg{ width:min(94vw, 520px, 76svh); }
 
